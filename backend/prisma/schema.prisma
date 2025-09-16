@@ -13,11 +13,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Service {
+model Project {
   id        Int       @id @default(autoincrement())
   name      String 
-  repoUrl   String?
-  status    String    @default("created)
+  repoUrl   String
+  status    String    
+  prompt    String 
   createdAt DateTime  @default(now())
 
 }
