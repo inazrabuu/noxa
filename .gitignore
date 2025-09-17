@@ -18,3 +18,4 @@ pnpm-debug.log*
 
 backend/prisma/dev.db
 **/dist/
+**/tmp/

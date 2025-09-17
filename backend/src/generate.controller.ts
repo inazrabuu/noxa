@@ -38,9 +38,11 @@ export class GenerateController {
     const zipFilePath = path.join(outDir, `${spec.name}-${Date.now()}.zip`);
     fs.writeFileSync(zipFilePath, zipBuffer);
 
+    const repoUrl = await this.projectService.createAndPushToGit(spec.name, zipFilePath);
+
     const {zipPath, ...project} = await this.projectService.create({
       name: spec.name,
-      repoUrl: 'https://github.com/lalala',
+      repoUrl: repoUrl,
       status: 'created',
       prompt: body.prompt,
       files: spec.files,
