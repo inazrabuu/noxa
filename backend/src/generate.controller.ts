@@ -1,14 +1,20 @@
 import { Body, Controller, Post, Res, BadRequestException } from "@nestjs/common";
 import express from "express";
 import JSZip from "jszip";
+import fs from 'fs';
+import path from "path";
 import { LlmService } from "./llm/llm.service";
+import { ProjectService } from "./project.service";
 
 @Controller('api')
 export class GenerateController {
-  constructor(private readonly llm: LlmService) {}
+  constructor(
+    private readonly llm: LlmService,
+    private readonly projectService: ProjectService
+  ) {}
 
   @Post('generate-project')
-  async generate(@Body() body: { prompt?: string }, @Res() res: express.Response) {
+  async generate(@Body() body: { prompt?: string }) {
     if (!body?.prompt || body.prompt.trim().length === 0) {
       throw new BadRequestException('prompt is required in body');
     }
@@ -19,17 +25,31 @@ export class GenerateController {
       throw new BadRequestException('Invalid spec returned from generator');
     }
 
-
     const zip = new JSZip();
     for (const f of spec.files) {
       if (!f.path || typeof f.content !== 'string') continue;
       zip.file(f.path, f.content)
     }
 
-    const buffer = await zip.generateAsync({ type: 'nodebuffer' });
+    const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' });
 
-    res.setHeader('Content-Type', 'application/zip');
-    res.setHeader('Content-Disposition', `attachment; filename=${(spec.name || 'project')}.zip`);
-    res.send(buffer);
+    const outDir = path.join(process.cwd(), 'generated-zips');
+    if (!fs.existsSync(outDir)) fs.mkdirSync(outDir);
+    const zipFilePath = path.join(outDir, `${spec.name}-${Date.now()}.zip`);
+    fs.writeFileSync(zipFilePath, zipBuffer);
+
+    const {zipPath, ...project} = await this.projectService.create({
+      name: spec.name,
+      repoUrl: 'https://github.com/lalala',
+      status: 'created',
+      prompt: body.prompt,
+      files: spec.files,
+      zipPath: zipFilePath
+    });
+
+    return {
+      ...project,
+      zipUrl: `/api/projects/${project.id}/download`
+    };
   }
 }

@@ -19,6 +19,8 @@ model Project {
   repoUrl   String
   status    String    
   prompt    String 
+  files     Json
+  zipPath   String
   createdAt DateTime  @default(now())
 
 }
