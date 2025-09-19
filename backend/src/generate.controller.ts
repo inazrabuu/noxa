@@ -5,12 +5,14 @@ import fs from 'fs';
 import path from "path";
 import { LlmService } from "./llm/llm.service";
 import { ProjectService } from "./project.service";
+import { DeployerService } from "./deployer/deployer.service";
 
 @Controller('api')
 export class GenerateController {
   constructor(
     private readonly llm: LlmService,
-    private readonly projectService: ProjectService
+    private readonly projectService: ProjectService,
+    private readonly deployerService: DeployerService
   ) {}
 
   @Post('generate-project')
@@ -38,7 +40,8 @@ export class GenerateController {
     const zipFilePath = path.join(outDir, `${spec.name}-${Date.now()}.zip`);
     fs.writeFileSync(zipFilePath, zipBuffer);
 
-    const repoUrl = await this.projectService.createAndPushToGit(spec.name, zipFilePath);
+    const outputPath = path.join(process.cwd(), 'tmp', spec.name);
+    const repoUrl = await this.projectService.createAndPushToGit(spec.name, zipFilePath, outputPath);
 
     const {zipPath, ...project} = await this.projectService.create({
       name: spec.name,
@@ -48,6 +51,8 @@ export class GenerateController {
       files: spec.files,
       zipPath: zipFilePath
     });
+
+    await this.deployerService.deployGeneratedProject(project.id, project.name, outputPath);
 
     return {
       ...project,

@@ -20,8 +20,7 @@ export class ProjectService {
       .promise();
   }
 
-  async createAndPushToGit(projectName: string, zipFilePath: string) {
-    const tempPath = path.join(process.cwd(), 'tmp', projectName);
+  async createAndPushToGit(projectName: string, zipFilePath: string, tempPath: string) {
     fs.mkdirSync(tempPath, { recursive: true });
     await this.unzipProject(zipFilePath, tempPath);
 

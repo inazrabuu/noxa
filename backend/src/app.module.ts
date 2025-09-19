@@ -7,12 +7,14 @@ import { HealthController } from './health.controller';
 import { LlmService } from './llm/llm.service';
 import { ProjectService } from './project.service';
 import { ProjectController } from './project.controller';
+import { DeployerService } from './deployer/deployer.service';
+import { ExecController } from './exec.controller';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
   ],
-  controllers: [AppController, HealthController, GenerateController, ProjectController],
-  providers: [AppService, LlmService, ProjectService],
+  controllers: [AppController, HealthController, GenerateController, ProjectController, ExecController],
+  providers: [AppService, LlmService, ProjectService, DeployerService],
 })
 export class AppModule {}

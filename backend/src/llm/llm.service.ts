@@ -59,6 +59,8 @@ export class LlmService {
           resp.data?.choices[0].message.content ??
           resp.data?.choices[0].text;
 
+        console.log(text);
+
         try {
           const parsed = JSON.parse(text);
           return parsed;
