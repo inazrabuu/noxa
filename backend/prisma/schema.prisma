@@ -17,10 +17,11 @@ model Project {
   id        Int       @id @default(autoincrement())
   name      String 
   repoUrl   String
-  status    String    
-  prompt    String 
+  url       String    @default("http://abc.xyz:3000")
+  env       String    @default("dev")
+  status    String    @default("created")
+  prompt    String
   files     Json
   zipPath   String
   createdAt DateTime  @default(now())
-
 }
