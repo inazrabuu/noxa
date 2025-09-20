@@ -19,7 +19,8 @@ export class DeployerService {
 
   async deployGeneratedProject(projectId: number, projectName: string, projectDir: string) {
     try {
-      const imageTag = `${DOCKER_REPO}/${projectName}:latest`;
+      const imageTag = `${DOCKER_REPO}/${projectName}:latest`,
+            namespace = 'dev';
 
       await this.updateProjectStatus(projectId, 'building');
       
@@ -31,9 +32,11 @@ export class DeployerService {
 
       await this.updateProjectStatus(projectId, 'deploying');
 
-      await this.deployImage(projectDir, projectName, imageTag);
+      const serviceUrl = await this.deployImage(projectDir, projectName, imageTag, namespace);
 
-      await this.updateProjectStatus(projectId, 'deployed');
+      await this.updateProject(projectId, serviceUrl, 'deployed');
+
+      return serviceUrl;
 
     } catch (err) {
       this.logger.error('Deploy failed', err);
@@ -51,6 +54,16 @@ export class DeployerService {
     await this.prisma.project.update({
         where: { id: projectId },
         data: { status: status }
+      });
+  }
+
+  async updateProject(projectId: number, projectUrl: string, status: string) {
+    await this.prisma.project.update({
+        where: { id: projectId },
+        data: { 
+          url: projectUrl,
+          status: status
+        }
       });
   }
 
@@ -91,7 +104,7 @@ CMD ["node", "index.js"]
     await exec(`docker push ${imageTag}`);
   }
 
-  async deployImage(projectDir: string, projectName: string, imageTag: string) {
+  async deployImage(projectDir: string, projectName: string, imageTag: string, namespace: string) {
     this.logger.log(`Deploying to Kubernetes ... `);
 
     const manifest = `
@@ -99,7 +112,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ${projectName}
-  namespace: dev
+  namespace: ${namespace}
 spec:
   replicas: 1
   selector:
@@ -120,15 +133,38 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ${projectName}-svc
-  namespace: dev
+  namespace: ${namespace}
 spec:
+  type: NodePort
   selector:
     app: ${projectName}
   ports:
     - protocol: TCP
       port: 3000
       targetPort: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ${projectName}-ingress
+  namespace: ${namespace}
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: localhost
+      http:
+        paths:
+          - path: /${namespace}/${projectName}/(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: ${projectName}-svc
+                port:
+                  number: 3000
     `.trim()
+    console.log(manifest);
 
     const manifestFile = path.join(projectDir, 'k8s.yaml');
     fs.writeFileSync(manifestFile, manifest);
@@ -136,5 +172,7 @@ spec:
     await exec(`kubectl apply -f ${manifestFile}`);
 
     this.logger.log(`✅ Deployment finished`);
+
+    return `http://localhost/${namespace}/${projectName}`;
   }
 }

@@ -52,11 +52,12 @@ export class GenerateController {
       zipPath: zipFilePath
     });
 
-    await this.deployerService.deployGeneratedProject(project.id, project.name, outputPath);
+    const url = await this.deployerService.deployGeneratedProject(project.id, project.name, outputPath);
 
     return {
       ...project,
-      zipUrl: `/api/projects/${project.id}/download`
+      url,
+      zipUrl: `/api/projects/${project.id}/download`,
     };
   }
 }
