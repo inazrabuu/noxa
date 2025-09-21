@@ -20,6 +20,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@nestjs-modules/mailer": "^2.0.2",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
@@ -27,6 +28,7 @@
     "@octokit/rest": "^22.0.0",
     "@prisma/client": "^6.16.1",
     "axios": "^1.12.2",
+    "handlebars": "^4.7.8",
     "jszip": "^3.10.1",
     "prisma": "^6.16.1",
     "reflect-metadata": "^0.2.2",

@@ -55,6 +55,13 @@ export class ProjectService {
     return prisma.project.findUnique({ where: { id } })
   }
 
+  async update(id: number, param: any) {
+    return prisma.project.update({
+      where: { id: id },
+      data: param
+    })
+  }
+
   async list() {
     return prisma.project.findMany({ orderBy: { createdAt: 'desc' }})
   }

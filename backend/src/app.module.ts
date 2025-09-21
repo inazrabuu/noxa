@@ -9,12 +9,13 @@ import { ProjectService } from './project.service';
 import { ProjectController } from './project.controller';
 import { DeployerService } from './deployer/deployer.service';
 import { ExecController } from './exec.controller';
+import { TemplateService } from './template.service';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true })
   ],
   controllers: [AppController, HealthController, GenerateController, ProjectController, ExecController],
-  providers: [AppService, LlmService, ProjectService, DeployerService],
+  providers: [AppService, LlmService, ProjectService, DeployerService, TemplateService],
 })
 export class AppModule {}

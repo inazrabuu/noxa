@@ -6,6 +6,8 @@ import fs from 'fs';
 import path from 'path';
 import { PrismaClient } from "@prisma/client";
 
+import { TemplateService } from "src/template.service";
+
 const exec = promisify(execCb);
 
 const DOCKER_USERNAME = process.env.DOCKER_USERNAME,
@@ -16,6 +18,7 @@ const DOCKER_USERNAME = process.env.DOCKER_USERNAME,
 export class DeployerService {
   private readonly logger = new Logger(DeployerService.name);
   private readonly prisma = new PrismaClient();
+  private readonly templateService = new TemplateService();
 
   async deployGeneratedProject(projectId: number, projectName: string, projectDir: string) {
     try {
@@ -107,64 +110,11 @@ CMD ["node", "index.js"]
   async deployImage(projectDir: string, projectName: string, imageTag: string, namespace: string) {
     this.logger.log(`Deploying to Kubernetes ... `);
 
-    const manifest = `
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: ${projectName}
-  namespace: ${namespace}
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: ${projectName}
-  template:
-    metadata:
-      labels:
-        app: ${projectName}
-    spec:
-      containers:
-        - name: ${projectName}
-          image: ${imageTag}
-          ports:
-            - containerPort: 3000
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: ${projectName}-svc
-  namespace: ${namespace}
-spec:
-  type: NodePort
-  selector:
-    app: ${projectName}
-  ports:
-    - protocol: TCP
-      port: 3000
-      targetPort: 3000
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: ${projectName}-ingress
-  namespace: ${namespace}
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$1
-spec:
-  ingressClassName: nginx
-  rules:
-    - host: localhost
-      http:
-        paths:
-          - path: /${namespace}/${projectName}/(.*)
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: ${projectName}-svc
-                port:
-                  number: 3000
-    `.trim()
-    console.log(manifest);
+    const manifest = await this.templateService.renderTemplate('service-deploy', {
+      projectName,
+      namespace,
+      imageTag
+    });
 
     const manifestFile = path.join(projectDir, 'k8s.yaml');
     fs.writeFileSync(manifestFile, manifest);
