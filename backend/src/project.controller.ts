@@ -28,8 +28,7 @@ export class ProjectController {
     if (!project)
       throw new NotFoundException(`Project not found`);
 
-    const projectDir = join(process.cwd(), `tmp/${project.name}`);
-    const imageTag = `${process.env.DOCKER_REPO}/${project.name}:latest`;
+    const [ projectDir, imageTag ] = this.getProjectAssets(project.name);
     await this.deployerService.deployImage(projectDir, project.name, imageTag, project.env);
 
     await this.projectService.update(project.id, {
@@ -41,6 +40,49 @@ export class ProjectController {
       name: project.name,
       status: 'deployed'
     }
+  }
+
+  @Post(':id/promote')
+  async promote(@Param('id') id: string) {
+    const project = await this.projectService.findById(Number(id));
+    if (!project)
+      throw new NotFoundException(`Project not found`);
+
+    if (project.env === 'stag')
+      throw new BadRequestException('Project already at maximum promotion');
+
+    const env = 'stag';
+
+    const stagProject = await this.projectService.findOrCreate({
+      name: project.name,
+      repoUrl: project.repoUrl,
+      status: 'deploying',
+      prompt: project.prompt,
+      files: project.files,
+      zipPath: project.zipPath,
+      env: env
+    });
+
+    const [ projectDir, imageTag ] = this.getProjectAssets(project.name);
+    await this.deployerService.deployImage(projectDir, project.name, imageTag, env);
+
+    await this.projectService.update(stagProject.id, {
+      url: project.url.replace('dev', 'stag'),
+      status: 'deployed'
+    });
+
+    return {
+      name: project.name,
+      env,
+      status: 'deployed',
+    };
+  }
+
+  getProjectAssets(projectName: string) {
+    return [
+      join(process.cwd(), `tmp`, projectName),
+      join(`${process.env.DOCKER_REPO}/${projectName}:latest`)
+    ]
   }
 
   @Get('test')

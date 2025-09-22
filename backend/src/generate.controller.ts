@@ -49,7 +49,8 @@ export class GenerateController {
       status: 'created',
       prompt: body.prompt,
       files: spec.files,
-      zipPath: zipFilePath
+      zipPath: zipFilePath,
+      env: 'dev'
     });
 
     const url = await this.deployerService.deployGeneratedProject(project.id, project.name, outputPath);

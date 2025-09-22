@@ -115,8 +115,9 @@ CMD ["node", "index.js"]
       namespace,
       imageTag
     });
+    console.log(manifest);
 
-    const manifestFile = path.join(projectDir, 'k8s.yaml');
+    const manifestFile = path.join(projectDir, `k8s-${namespace}.yaml`);
     fs.writeFileSync(manifestFile, manifest);
 
     await exec(`kubectl apply -f ${manifestFile}`);

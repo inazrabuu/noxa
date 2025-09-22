@@ -15,7 +15,6 @@ export class TemplateService {
 
     if (!template) {
       const templatePath = join(process.cwd(), 'templates', `${templateName}.hbs`);
-      console.log(templatePath);
 
       try {
         const templateSource = await readFile(templatePath, 'utf-8');

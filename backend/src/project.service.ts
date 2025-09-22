@@ -46,9 +46,31 @@ export class ProjectService {
 
   async create(project: { 
     name: string; repoUrl: string; status: string; prompt: string;
-    files: any; zipPath: string;
+    files: any; zipPath: string; env: string
    }) {
     return prisma.project.create({ data: project })
+  }
+
+  async findOrCreate(params: { 
+    name: string; repoUrl: string; status: string; prompt: string;
+    files: any; zipPath: string; env: string
+   }) {
+    let project = await prisma.project.findFirst({ 
+      where: { 
+        name: params.name, 
+        env: params.env 
+      } 
+    });
+
+    if (!project) {
+      project = await this.create({
+        name: params.name, repoUrl: params.repoUrl, status: params.status, 
+        prompt: params.prompt, files: params.files, zipPath: params.zipPath, 
+        env: params.env
+      });
+    }
+
+    return project;
   }
 
   async findById(id: number) {
