@@ -4,6 +4,34 @@ import axios from "axios";
 @Injectable()
 export class LlmService {
   private readonly logger = new Logger(LlmService.name);
+  private readonly apiKey = process.env.OPENROUTER_API_KEY || '';
+  private readonly apiUrl = `${process.env.OPENROUTER_BASE_URL}/chat/completions` || '';
+
+  private buildBody(system: string, prompt: string) {
+    return {
+      model: process.env.LLM_MODEL || 'deepseek/deepseek-chat-v3.1:free',
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.0,
+      max_tokens: 1600
+    }
+  }
+
+  private async callLLM(apiKey: string, body: Record<string, any>) {
+    return await axios.post(
+      this.apiUrl,
+      body,
+      {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: 60_000
+      }
+    );
+  }
 
   /* 
   Generate a "spec" from prompt. If OPENROUTER_API_KEY is present, attempt to call
@@ -32,28 +60,9 @@ export class LlmService {
         
         Do not add \`\`\`json enclosing so that it can be parsed directly.`;
 
-        const body = {
-          model: process.env.LLM_MODEL || 'deepseek/deepseek-chat-v3.1:free',
-          messages: [
-            { role: 'system', content: system },
-            { role: 'user', content: prompt }
-          ],
-          temperature: 0.0,
-          max_tokens: 1600
-        };
+        const body = this.buildBody(system, prompt);
 
-        const apiUrl = `${process.env.OPENROUTER_BASE_URL}/chat/completions` || '';
-        const resp = await axios.post(
-          apiUrl,
-          body,
-          {
-            headers: {
-              Authorization: `Bearer ${apiKey}`,
-              'Content-Type': 'application/json'
-            },
-            timeout: 60_000
-          }
-        );
+        const resp = await this.callLLM(apiKey, body);
 
         const text = 
           resp.data?.choices[0].message.content ??
@@ -86,6 +95,42 @@ export class LlmService {
       name,
       description: prompt,
       files
+    }
+  }
+
+  /* Generate a comment for a github Pull Request event, 
+  expect the model to make a review as a senior software developer 
+  based on a diff file of a PR.
+
+  This will return the comment directly in string.
+   */
+  async generatePRComment(diff: string) {
+    const system = `
+You are a senior software engineer reviewing a pull request. 
+Input: a git diff.  
+Task: Identify:
+- Code smells
+- Security risks
+- Possible refactors
+- Test coverage issues
+
+Output: A concise GitHub PR comment (bullet points).`;
+
+    const body = this.buildBody(system, diff);
+
+    try {
+      const resp = await this.callLLM(this.apiKey, body);
+
+      const text = 
+          resp.data?.choices[0].message.content ??
+          resp.data?.choices[0].text;
+
+      console.log(text);
+
+      return text;
+    } catch (e) {
+      this.logger.error('LLM call failed', e);
+      throw e;
     }
   }
 

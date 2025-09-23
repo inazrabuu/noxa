@@ -1,0 +1,15 @@
+version: '3'
+services:
+  runner:
+    image: myoung34/github-runner:latest
+    environment:
+      REPO_URL: https://github.com/inazrabuu/gallery-service
+      RUNNER_NAME: docker-runner
+      RUNNER_WORKDIR: /tmp/github-runner
+      RUNNER_TOKEN: ${RUNNER_TOKEN}
+      LABELS: self-hosted,linux,x64
+      ACTIONS_RUNNER_DEBUG: "true"
+      ACTIONS_STEP_DEBUG: "true"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: always
