@@ -32,7 +32,6 @@ export class CodeController {
     );
 
     return {
-      authHeaders,
       owner,
       repo,
       pr, 
