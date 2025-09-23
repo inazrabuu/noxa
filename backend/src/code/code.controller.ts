@@ -39,4 +39,16 @@ export class CodeController {
       comment
     };
   }
+
+  @Post('log-explain')
+  async explain(@Body() body: { logs: string }) {
+    const { logs } = body
+
+    const comment = await this.llmService.explainLogs(logs);
+
+    return {
+      logs,
+      comment
+    };
+  }
 }

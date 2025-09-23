@@ -134,6 +134,37 @@ Output: A concise GitHub PR comment (bullet points).`;
     }
   }
 
+  /* Generate a comprehensive comment to explain what leads to the current the situation 
+  according to the given log and probable solution(s) on how to overcome the situation 
+  in a readable human language.
+
+  This will return a comment directly in a string */
+  async explainLogs(logs: string) {
+    const system = `
+You are an expert software / IT engineer that explains logs and errors in plain language
+complete with the root cause (background that leads to the situation) and how 
+to overcome if it is an error log. 
+    `;
+    const user = `
+Please explain this error log:
+
+${logs}
+    `;
+
+    try {
+      const resp = await this.callLLM(this.apiKey, this.buildBody(system, user));
+      const text = 
+          resp.data?.choices[0].message.content ??
+          resp.data?.choices[0].text;
+
+      console.log(text);
+      return text;
+    } catch(e) {
+      this.logger.error('LLM call failed', e);
+      throw e;
+    }
+  }
+
   private extractServiceName(prompt: string): string {
     const m = prompt.match(/(\w+)[\s-]*service/i);
     if (m) return `${m[1]}-service`.toLowerCase();
