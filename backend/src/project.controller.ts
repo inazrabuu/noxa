@@ -1,12 +1,14 @@
-import { Controller, Get, Post, Param, Res, NotFoundException, BadRequestException } from "@nestjs/common";
+import { Controller, Get, Post, Param, Res, NotFoundException, BadRequestException, UseGuards } from "@nestjs/common";
 import express from "express";
 import { ProjectService } from "./project.service";
 import { DeployerService } from "./deployer/deployer.service";
 import fs from 'fs';
 import { join } from "path";
 import { TemplateService } from "./template.service";
+import { JwtAuthGuard } from "./auth/guards/jwt-auth.guard";
 
 @Controller('api/projects')
+@UseGuards(JwtAuthGuard)
 export class ProjectController {
   constructor(
     private readonly projectService: ProjectService,
