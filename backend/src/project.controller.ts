@@ -13,6 +13,11 @@ export class ProjectController {
     private readonly deployerService: DeployerService
   ) {}
 
+  @Get('')
+  async projects() {
+    return await this.projectService.list();
+  }
+
   @Get(':id/download')
   async download(@Param('id') id: string, @Res() res: express.Response) {
     const project = await this.projectService.findById(Number(id));
@@ -39,6 +44,25 @@ export class ProjectController {
     return {
       name: project.name,
       status: 'deployed'
+    }
+  }
+
+  @Get(':id/logs')
+  async logs(@Param('id') id: string) {
+    const project = await this.projectService.findById(Number(id));
+    if (!project)
+      throw new NotFoundException('Project not found.');
+
+    const logs = await this.projectService.getLogs(project.name, project.env, 100);
+
+    const name = project.name,
+          env = project.env
+
+    return {
+      id,
+      name,
+      env,
+      logs
     }
   }
 

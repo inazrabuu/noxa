@@ -11,12 +11,13 @@ import { DeployerService } from './deployer/deployer.service';
 import { ExecController } from './exec.controller';
 import { TemplateService } from './template.service';
 import { CodeController } from './code/code.controller';
+import { K8sService } from './k8s/k8s.service';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true })
   ],
   controllers: [AppController, HealthController, GenerateController, ProjectController, ExecController, CodeController],
-  providers: [AppService, LlmService, ProjectService, DeployerService, TemplateService],
+  providers: [AppService, LlmService, ProjectService, DeployerService, TemplateService, K8sService],
 })
 export class AppModule {}

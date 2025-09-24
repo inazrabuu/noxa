@@ -5,6 +5,7 @@ import simpleGit from "simple-git";
 import fs from 'fs';
 import path from 'path';
 import unzipper from 'unzipper';
+import { K8sService } from "./k8s/k8s.service";
 
 const prisma = new PrismaClient();
 
@@ -86,5 +87,21 @@ export class ProjectService {
 
   async list() {
     return prisma.project.findMany({ orderBy: { createdAt: 'desc' }})
+  }
+
+  async getLogs(name: string, namespace: string, limit: number) {
+    const k8sService = new K8sService()
+    const labelSelector = `app=${name}`;
+
+    const pods = await k8sService.listPods(namespace, labelSelector);
+    if (pods.length === 0)
+      return []
+
+    // TO DO: refactor this with dynamic name from parameter
+    const podName = pods[0].name;
+    const containerName = pods[0].containers[0];
+    console.log(podName, containerName);
+
+    return k8sService.getPodLogs(namespace, podName, containerName, limit);
   }
 }
