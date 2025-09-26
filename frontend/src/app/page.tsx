@@ -2,7 +2,7 @@
 
 import useSWR from 'swr'
 
-const fetcher = (url: string) => fetch(url).then(r => r.json())
+const fetcher = (url: string) => fetch(url, { credentials: 'include' }).then(r => r.json())
 
 export default function Home() {
   const { data, error } = useSWR('http://localhost:3001/api/info', fetcher)
