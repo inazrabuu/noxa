@@ -40,6 +40,19 @@ export class AuthController {
     }
   }
 
+  @Get('/logout')
+  async logout(@Res() res: express.Response) {
+    res.clearCookie('access_token', {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: false
+    })
+
+    return {
+      messaeg: 'Logged out'
+    }
+  }
+
   responseToken(req, res, token) {
     const fromFrontend = req.query.state === 'frontend';
 
