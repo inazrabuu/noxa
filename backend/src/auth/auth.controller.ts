@@ -1,6 +1,7 @@
 import { Controller, Get, Req, Res, UseGuards } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
 import { GoogleAuthGuard } from "./guards/google-auth.guard";
+import { GithubAuthGuard } from "./guards/github-auth.guard";
 import { AuthService } from "./auth.service";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import express from "express";
@@ -16,20 +17,18 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   async googleAuthCallback(@Req() req, @Res() res: express.Response) {
-    const token = await this.authService.validateOAuthLogin(req.user);
-    return this.responseToken(req, res, token);
+    return this.handleCallback(req, res);
   }
 
   //Github
   @Get('github')
-  @UseGuards(AuthGuard('github'))
+  @UseGuards(GithubAuthGuard)
   async githubAuth() {}
 
   @Get('github/callback')
   @UseGuards(AuthGuard('github'))
   async githubAuthCallback(@Req() req, @Res() res: express.Response) {
-    const token = await this.authService.validateOAuthLogin(req.user);
-    return this.responseToken(req, res, token);
+    return this.handleCallback(req, res);
   }
 
   @Get('/session')
@@ -47,10 +46,15 @@ export class AuthController {
       sameSite: 'lax',
       secure: false
     })
-    
+
     return res.json({
       message: "Logged out"
     })
+  }
+
+  async handleCallback(req, res) {
+    const token = await this.authService.validateOAuthLogin(req.user);
+    return this.responseToken(req, res, token);
   }
 
   responseToken(req, res, token) {
