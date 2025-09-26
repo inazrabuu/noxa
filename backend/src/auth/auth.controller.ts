@@ -1,6 +1,7 @@
-import { Controller, Get, Req, UseGuards } from "@nestjs/common";
+import { Controller, Get, Req, Res, UseGuards } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
 import { AuthService } from "./auth.service";
+import express from "express";
 
 @Controller('auth')
 export class AuthController {
@@ -12,9 +13,9 @@ export class AuthController {
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
-  async googleAuthCallback(@Req() req) {
+  async googleAuthCallback(@Req() req, @Res() res: express.Response) {
     const token = await this.authService.validateOAuthLogin(req.user);
-    return { access_token: token };
+    return this.responseToken(req, res, token);
   }
 
   //Github
@@ -24,8 +25,28 @@ export class AuthController {
 
   @Get('github/callback')
   @UseGuards(AuthGuard('github'))
-  async githubAuthCallback(@Req() req) {
+  async githubAuthCallback(@Req() req, @Res() res: express.Response) {
     const token = await this.authService.validateOAuthLogin(req.user);
-    return { access_token: token };
+    return this.responseToken(req, res, token);
+  }
+
+  responseToken(req, res, token) {
+    const fromFrontend = req.query.space === 'frontend';
+
+    if (!fromFrontend)
+      return res.json({ access_token: token });
+
+    this.setHttpOnlyCookie(res, token);
+    return res.redirect(process.env.CLIENT_AUTH_CALLBACK_URL);
+  }
+
+  setHttpOnlyCookie(res: express.Response, token: string) {
+    res.cookie('access_token', token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+      path: '/'
+    });
   }
 }
