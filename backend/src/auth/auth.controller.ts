@@ -1,5 +1,6 @@
 import { Controller, Get, Req, Res, UseGuards } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
+import { GoogleAuthGuard } from "./guards/google-auth.guard";
 import { AuthService } from "./auth.service";
 import express from "express";
 
@@ -8,8 +9,8 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
   //Google
   @Get('google')
-  @UseGuards(AuthGuard('google'))
-  async googleAuth() {}
+  @UseGuards(GoogleAuthGuard)
+  async googleAuth(@Req() req) {}
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
@@ -31,7 +32,7 @@ export class AuthController {
   }
 
   responseToken(req, res, token) {
-    const fromFrontend = req.query.space === 'frontend';
+    const fromFrontend = req.query.state === 'frontend';
 
     if (!fromFrontend)
       return res.json({ access_token: token });
