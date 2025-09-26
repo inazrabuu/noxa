@@ -47,10 +47,10 @@ export class AuthController {
       sameSite: 'lax',
       secure: false
     })
-
-    return {
-      messaeg: 'Logged out'
-    }
+    
+    return res.json({
+      message: "Logged out"
+    })
   }
 
   responseToken(req, res, token) {
