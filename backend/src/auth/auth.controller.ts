@@ -2,6 +2,7 @@ import { Controller, Get, Req, Res, UseGuards } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
 import { GoogleAuthGuard } from "./guards/google-auth.guard";
 import { AuthService } from "./auth.service";
+import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import express from "express";
 
 @Controller('auth')
@@ -29,6 +30,14 @@ export class AuthController {
   async githubAuthCallback(@Req() req, @Res() res: express.Response) {
     const token = await this.authService.validateOAuthLogin(req.user);
     return this.responseToken(req, res, token);
+  }
+
+  @Get('/session')
+  @UseGuards(JwtAuthGuard)
+  async sessionCheck() {
+    return {
+      authorized: true
+    }
   }
 
   responseToken(req, res, token) {
