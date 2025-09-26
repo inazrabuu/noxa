@@ -4,8 +4,11 @@ An AI-first Internal Developer Platform (IDP) that can boost developer productiv
 
 ## How To Use
 
-- `docker compose build --no-cache`
-- `docker compose up`
+* `docker compose build --no-cache`
+* `docker compose up`
+* kind create cluster --name noxa-idp
+* kubectl create namespace dev
+* kubectl create namespace dev
 
 ### Frontend
 - Go to `http://localhost:3000`
@@ -14,7 +17,7 @@ An AI-first Internal Developer Platform (IDP) that can boost developer productiv
 - Use API caller / curl and go to `http://locahost:3001`
 
 ### TO DO:
-* prompts to templates
+* move prompts to templates
 * auto generated gh actions for projects
 * env vars for backend code reviewer
 * auto deploy from repo
