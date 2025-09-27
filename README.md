@@ -21,3 +21,4 @@ An AI-first Internal Developer Platform (IDP) that can boost developer productiv
 * auto generated gh actions for projects
 * env vars for backend code reviewer
 * auto deploy from repo
+* github oauth flow
