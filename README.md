@@ -46,9 +46,9 @@ Simplify debugging and post-mortems:
 
 * `docker compose build --no-cache`
 * `docker compose up`
-* kind create cluster --name noxa-idp
-* kubectl create namespace dev
-* kubectl create namespace dev
+* `kind create cluster --name noxa-idp`
+* `kubectl create namespace dev`
+* `kubectl create namespace stag`
 
 ### Frontend
 - Go to `http://localhost:3000`
